@@ -1,10 +1,11 @@
 {
 	"bugs": {
-		"url": "https://github.com/thelioo/opencode-balancer/issues"
+		"url": "https://github.com/Guisardo/opencode-balancer/issues"
 	},
 	"dependencies": {
 		"@opencode-ai/plugin": "^1.14.51",
-		"@opentui/solid": "^0.4.3",
+		"@opencode/plugin": "^2.0.16",
+		"@opentui/solid": "^0.5.8",
 		"solid-js": "^1.9.12"
 	},
 	"description": "Account balancer plugin for opencode.",
@@ -22,6 +23,12 @@
 		},
 		"./tui": {
 			"default": "./dist/tui/tui.js"
+		},
+		"./v2": {
+			"default": "./dist/v2/index.js"
+		},
+		"./v2/tui": {
+			"default": "./dist/v2/tui.js"
 		}
 	},
 	"files": [
@@ -30,7 +37,7 @@
 		"INSTALL.txt",
 		"LICENSE"
 	],
-	"homepage": "https://github.com/thelioo/opencode-balancer#readme",
+	"homepage": "https://github.com/Guisardo/opencode-balancer#readme",
 	"keywords": [
 		"opencode",
 		"opencode-plugin",
@@ -40,9 +47,14 @@
 	"license": "MIT",
 	"main": "./dist/index.js",
 	"name": "@thelioo/opencode-balancer",
+	"peerDependencies": {
+		"@opentui/core": ">=0.5.8",
+		"@opentui/solid": ">=0.5.8",
+		"solid-js": ">=1.9.0"
+	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/thelioo/opencode-balancer.git"
+		"url": "git+https://github.com/Guisardo/opencode-balancer.git"
 	},
 	"scripts": {
 		"build": "bun scripts/build.ts",

@@ -1,0 +1,33 @@
+## Summary
+
+Implements testing infrastructure for dual v1/v2 compatibility (resolves #8).
+
+### Changes
+
+**New Test Files:**
+- `test/server/index.v2.test.ts` - 9 tests for v2 server hooks (modelRequest, context, commandTransform, toolTransform)
+- `test/tui/v2-tui.test.ts` - 6 tests for v2 TUI plugin (routes, keymap, slots, cleanup)
+- `test/v2-index.test.ts` - 2 tests for v2 plugin entrypoint
+
+**CI:**
+- `.github/workflows/test.yml` - Matrix testing against both v1 (`@opencode-ai/plugin@1`) and v2 (`@opencode/plugin@2`)
+
+**Source Updates:**
+- `src/server/index.v2.ts` - Accept optional database param (matching v1 pattern)
+
+**Documentation:**
+- `README.md` - Added v1/v2 Compatibility section with dual entrypoint table, installation for v2, shared logic, hook adapters, and local testing
+- `INSTALL.txt` - Updated AI agent guide with v1/v2 entrypoints
+
+### Test Results
+
+All 17 new v2 tests pass:
+```
+test/v2-index.test.ts:        2 pass
+test/server/index.v2.test.ts: 9 pass  
+test/tui/v2-tui.test.ts:      6 pass
+```
+
+### Note
+
+19 pre-existing test failures (Windows file locking EBUSY errors + 1 schema test) are unrelated to this work - they exist on main branch as well.
