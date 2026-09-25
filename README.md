@@ -8,8 +8,9 @@ _Use multiple accounts and provider/model priorities in opencode, then fail over
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![opencode plugin](https://img.shields.io/badge/opencode-plugin-111?style=flat-square)](https://opencode.ai/docs/plugins)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Guisardo/opencode-balancer/test.yml?style=flat-square&label=tests)](https://github.com/Guisardo/opencode-balancer/actions/workflows/test.yml)
 
-[Features](#features) | [Installation](#installation) | [Usage](#usage) | [Troubleshooting](#troubleshooting)
+[Features](#features) | [Installation](#installation) | [Usage](#usage) | [v1/v2 Compatibility](#v1v2-compatibility) | [Development](#local-development) | [Troubleshooting](#troubleshooting)
 
 </div>
 
@@ -66,6 +67,9 @@ Then add the same plugin to your opencode TUI config so the dashboard can load:
 Use the package name without an explicit `@latest` tag so opencode can refresh to newer published versions on restart.
 
 Then restart opencode. The same package provides both the server hooks and the TUI dashboard.
+
+> [!NOTE]
+> For **opencode v2**, use `@thelioo/opencode-balancer/v2` and `@thelioo/opencode-balancer/v2/tui` instead. See [v1/v2 Compatibility](#v1v2-compatibility).
 
 > [!TIP]
 > No manual `npm install` is required. opencode installs npm plugins automatically with Bun at startup and caches them locally.
@@ -144,6 +148,73 @@ If `OPENCODE_CONFIG_DIR` is set, the plugin uses that directory instead.
 
 > [!CAUTION]
 > The account store contains credentials. Keep it private and do not commit it to a repository.
+
+## v1/v2 Compatibility
+
+`opencode-balancer` works with both **@opencode-ai/plugin v1.x** (current) and **@opencode/plugin v2** (upcoming) from a single codebase.
+
+### How It Works
+
+The plugin uses **dual entrypoints** with runtime version detection:
+
+| Version | Entrypoint | Called By |
+|---------|------------|-----------|
+| v1 | `server()` | opencode v1 calls `plugin.server()` |
+| v2 | `Plugin.define({ setup() })` | opencode v2 calls `plugin.setup()` |
+
+Both entrypoints are exported from the same package:
+- **v1 server**: `@thelioo/opencode-balancer` (default export)
+- **v1 TUI**: `@thelioo/opencode-balancer/tui`
+- **v2 server**: `@thelioo/opencode-balancer/v2`
+- **v2 TUI**: `@thelioo/opencode-balancer/v2/tui`
+
+### Installation for v2
+
+For opencode v2, update your config to use the v2 entrypoints:
+
+```json
+// opencode v2 server config
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["@thelioo/opencode-balancer/v2"]
+}
+```
+
+```json
+// opencode v2 TUI config
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugins": ["@thelioo/opencode-balancer/v2/tui"]
+}
+```
+
+### Shared Logic
+
+The plugin shares core logic between v1 and v2:
+- Account management, priority matrix, SQLite schema
+- Usage tracking (OpenAI, Copilot)
+- Request balancing and failover logic
+
+Version-specific adapters translate hooks:
+- **Server**: v1 `chat.headers`/`chat.message` → v2 `model.request`/`context`
+- **TUI**: v1 `route.register`/`command.register` → v2 `ui.router.register`/`keymap.layer`/`ui.slot`
+
+### Testing
+
+Both versions are tested in CI via GitHub Actions matrix:
+- v1: `@opencode-ai/plugin@1`
+- v2: `@opencode/plugin@2`
+
+Run tests locally:
+```bash
+# Test against currently installed opencode version
+bun test
+
+# Test against specific version (requires manual dependency swap)
+bun add -D @opencode-ai/plugin@1  # for v1
+bun add -D @opencode/plugin@2     # for v2
+bun test
+```
 
 ## Local Development
 
