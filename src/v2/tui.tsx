@@ -15,10 +15,12 @@ import { createUsageAutoRefresh } from "../tui/usage-auto-refresh";
 
 type DashboardModule = typeof import("../tui/components/dashboard");
 type PriorityScreenModule = typeof import("../tui/components/priority-screen");
-type ProviderModelDialogModule = typeof import("../tui/components/provider-model-dialog");
+type ProviderModelDialogModule =
+	typeof import("../tui/components/provider-model-dialog");
 type RenameDialogModule = typeof import("../tui/components/rename-dialog");
 type SidebarModule = typeof import("../tui/components/sidebar");
-type StatusIndicatorModule = typeof import("../tui/components/status-indicator");
+type StatusIndicatorModule =
+	typeof import("../tui/components/status-indicator");
 
 function inferProviderID(session: unknown) {
 	const providerID = (
@@ -56,7 +58,9 @@ export default Plugin.define({
 			sidebarModule,
 			statusIndicatorModule,
 		] = await Promise.all([
-			import("../tui/components/dashboard" + ".tsx") as Promise<DashboardModule>,
+			import(
+				"../tui/components/dashboard" + ".tsx"
+			) as Promise<DashboardModule>,
 			import(
 				"../tui/components/priority-screen" + ".tsx"
 			) as Promise<PriorityScreenModule>,
@@ -76,7 +80,9 @@ export default Plugin.define({
 		const usageAutoRefresh = createUsageAutoRefresh(asTuiApi(context), state);
 		const balancerBarSync = createTuiBalancerBarSync(asTuiApi(context), state);
 		const nativeModelApplier = createNativeModelApplier(asTuiApi(context));
-		let dashboardReturnRoute: { name: string; params?: Record<string, unknown> } | undefined;
+		let dashboardReturnRoute:
+			| { name: string; params?: Record<string, unknown> }
+			| undefined;
 		let nativeProviderID: string | undefined;
 		let sessionProviderID: string | undefined;
 
@@ -149,12 +155,7 @@ export default Plugin.define({
 							openNativeConnect({ ...asTuiApi(context), db: state.db }),
 						openPriority,
 						removeAccount: (providerID, alias) =>
-							removeAccountFromTui(
-								asTuiApi(context),
-								state,
-								providerID,
-								alias,
-							),
+							removeAccountFromTui(asTuiApi(context), state, providerID, alias),
 						renameAccount: (providerID, alias) =>
 							renameDialogModule.openRenameDialog(
 								asTuiApi(context),
@@ -180,11 +181,7 @@ export default Plugin.define({
 									applyNativeSelection: false,
 									onComplete,
 									onSelected: (model) =>
-										setProviderModel(
-											state.db,
-											model.providerID,
-											model.modelID,
-										),
+										setProviderModel(state.db, model.providerID, model.modelID),
 								},
 							),
 						state,
@@ -239,13 +236,10 @@ export default Plugin.define({
 							providerID,
 							alias,
 							{
-								applyNativeProviderModel:
-									applyNativeProviderModelAndTrack,
+								applyNativeProviderModel: applyNativeProviderModelAndTrack,
 								sessionProviderID:
 									nativeProviderID ??
-									inferProviderID(
-										context.state.session.get(sessionID),
-									),
+									inferProviderID(context.state.session.get(sessionID)),
 							},
 						);
 					},

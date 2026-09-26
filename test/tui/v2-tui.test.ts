@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { TempDirManager } from "../utils";
 import { join } from "node:path";
+import { TempDirManager } from "../utils";
 
 const compact = (source: string) => source.replace(/\s+/g, "");
 const expectSourceToContain = (source: string, snippet: string) =>
@@ -31,11 +31,7 @@ function createV2Api() {
 	const disposes: Array<() => void | Promise<void>> = [];
 
 	const context = {
-		lifecycle: {
-			onDispose: (fn: () => void | Promise<void>) => {
-				disposes.push(fn);
-			},
-		},
+		command: undefined,
 		keymap: {
 			layer: (layerFn: any) => {
 				const layer = layerFn();
@@ -45,6 +41,36 @@ function createV2Api() {
 			registerLayer: (layer: any) => {
 				keymapLayers.push(layer);
 				return () => {};
+			},
+		},
+		lifecycle: {
+			onDispose: (fn: () => void | Promise<void>) => {
+				disposes.push(fn);
+			},
+		},
+		renderer: {
+			height: 40,
+			width: 120,
+		},
+		route: {
+			current: { name: "home" },
+			navigate: (target: any) => {
+				navigations.push(target);
+			},
+		},
+		state: {
+			provider: [],
+			session: new Map(),
+		},
+		theme: {
+			current: {
+				accent: "accent",
+				background: "background",
+				primary: "primary",
+				success: "success",
+				text: "text",
+				textMuted: "textMuted",
+				warning: "warning",
 			},
 		},
 		ui: {
@@ -61,6 +87,7 @@ function createV2Api() {
 				},
 			},
 			router: {
+				current: { name: "home" },
 				navigate: (target: any) => {
 					navigations.push(target);
 				},
@@ -69,16 +96,10 @@ function createV2Api() {
 					routes.push(...defs);
 					return () => {};
 				},
-				current: { name: "home" },
 			},
 			slot: (slotDef: any) => {
 				slots.push(slotDef);
 				return () => {};
-			},
-			toast: {
-				show: (input: any) => {
-					toasts.push(input);
-				},
 			},
 			slots: {
 				register: (slotDef: any) => {
@@ -90,32 +111,11 @@ function createV2Api() {
 					return () => {};
 				},
 			},
-		},
-		command: undefined,
-		route: {
-			current: { name: "home" },
-			navigate: (target: any) => {
-				navigations.push(target);
+			toast: {
+				show: (input: any) => {
+					toasts.push(input);
+				},
 			},
-		},
-		state: {
-			session: new Map(),
-			provider: [],
-		},
-		theme: {
-			current: {
-				accent: "accent",
-				primary: "primary",
-				text: "text",
-				textMuted: "textMuted",
-				warning: "warning",
-				success: "success",
-				background: "background",
-			},
-		},
-		renderer: {
-			height: 40,
-			width: 120,
 		},
 	};
 
@@ -171,9 +171,7 @@ describe("v2 tui plugin", () => {
 
 			expect(dialogSizes).toEqual([]);
 			expect(dialogs).toEqual([]);
-			expect(navigations).toEqual([
-				"balancer.dashboard",
-			]);
+			expect(navigations).toEqual(["balancer.dashboard"]);
 			expect(toasts).toHaveLength(1);
 			expect(toasts[0]).toMatchObject({
 				message: "OpenCode Balancer loaded (v2)",
