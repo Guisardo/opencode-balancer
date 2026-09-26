@@ -153,6 +153,17 @@ If `OPENCODE_CONFIG_DIR` is set, the plugin uses that directory instead.
 
 `opencode-balancer` works with both **@opencode-ai/plugin v1.x** (current) and **@opencode/plugin v2** (upcoming) from a single codebase.
 
+### Migration Note: Config Key Difference
+
+**v1 uses `plugin` (singular), v2 uses `plugins` (plural).** This is an opencode framework difference, not a plugin difference.
+
+| Version | Config Key | Example |
+|---------|------------|---------|
+| v1 | `plugin` | `"plugin": ["@thelioo/opencode-balancer"]` |
+| v2 | `plugins` | `"plugins": ["@thelioo/opencode-balancer/v2"]` |
+
+When migrating from v1 to v2, update your config files to use `plugins` (plural) instead of `plugin` (singular).
+
 ### How It Works
 
 The plugin uses **dual entrypoints** with runtime version detection:
@@ -168,9 +179,25 @@ Both entrypoints are exported from the same package:
 - **v2 server**: `@thelioo/opencode-balancer/v2`
 - **v2 TUI**: `@thelioo/opencode-balancer/v2/tui`
 
-### Installation for v2
+### Installation for v1 (Current Stable)
 
-For opencode v2, update your config to use the v2 entrypoints:
+```json
+// opencode v1 server config
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@thelioo/opencode-balancer"]
+}
+```
+
+```json
+// opencode v1 TUI config
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["@thelioo/opencode-balancer"]
+}
+```
+
+### Installation for v2 (Upcoming)
 
 ```json
 // opencode v2 server config
@@ -194,10 +221,18 @@ The plugin shares core logic between v1 and v2:
 - Account management, priority matrix, SQLite schema
 - Usage tracking (OpenAI, Copilot)
 - Request balancing and failover logic
+- TUI components: Dashboard, PriorityScreen, Sidebar, StatusIndicator, ProviderModelDialog
+
+### Hook Adapters (v1 → v2 Mapping)
 
 Version-specific adapters translate hooks:
 - **Server**: v1 `chat.headers`/`chat.message` → v2 `model.request`/`context`
-- **TUI**: v1 `route.register`/`command.register` → v2 `ui.router.register`/`keymap.layer`/`ui.slot`
+- **Server**: v1 `command.execute.before` → v2 `command.transform`
+- **Server**: v1 `tool` (balancer_command) → v2 `tool.transform` (balancer_command)
+- **TUI**: v1 `route.register` → v2 `ui.router.register`
+- **TUI**: v1 `command.register`/`keymap.registerLayer` → v2 `keymap.layer`
+- **TUI**: v1 `slots.register` → v2 `ui.slot`
+- **TUI**: v1 `ui.dialog`/`ui.toast` → v2 `ui.dialog`/`ui.toast`
 
 ### Testing
 
@@ -216,6 +251,42 @@ bun add -D @opencode/plugin@2     # for v2
 bun test
 ```
 
+### Local Testing Instructions
+
+To test a local checkout with opencode, point your opencode config to the package directory:
+
+**v1:**
+```json
+{
+  "plugin": ["file:///absolute/path/to/opencode-balancer"]
+}
+```
+
+**v2:**
+```json
+{
+  "plugins": ["file:///absolute/path/to/opencode-balancer"]
+}
+```
+
+Add the same local path to your TUI config:
+
+**v1:**
+```json
+{
+  "plugin": ["file:///absolute/path/to/opencode-balancer"]
+}
+```
+
+**v2:**
+```json
+{
+  "plugins": ["file:///absolute/path/to/opencode-balancer"]
+}
+```
+
+Then restart opencode.
+
 ## Local Development
 
 ```bash
@@ -233,28 +304,12 @@ bun run version
 bun run release
 ```
 
-To test a local checkout with opencode, point your opencode config to the package directory:
-
-```json
-{
-  "plugin": ["file:///absolute/path/to/opencode-balancer"]
-}
-```
-
-And add the same local path to your TUI config:
-
-```json
-{
-  "plugin": ["file:///absolute/path/to/opencode-balancer"]
-}
-```
-
 ## Troubleshooting
 
 | Problem | What to try |
 | --- | --- |
-| Plugin does not load | Confirm `plugin` is singular in opencode config, restart opencode, and check that the package name is `@thelioo/opencode-balancer`. |
-| Dashboard does not open | Confirm `tui.json` also contains the plugin, restart opencode, then try `Ctrl+B`, `/balancer`, or the command palette. |
+| Plugin does not load | **v1**: Confirm `plugin` (singular) in opencode config. **v2**: Confirm `plugins` (plural) in opencode config. Restart opencode and check that the package name is `@thelioo/opencode-balancer`. |
+| Dashboard does not open | **v1**: Confirm `plugin` (singular) in tui.json. **v2**: Confirm `plugins` (plural) in tui.json. Restart opencode, then try `Ctrl+B`, `/balancer`, or the command palette. |
 | Account was not saved | Use **New account** from the Balancer dashboard and complete opencode's native provider connection flow. |
 | Provider is skipped | Open the priority matrix and confirm the provider is enabled and has a model selected. |
 | Account is not switching | Confirm there is another non-disabled saved account for the same provider and automatic balancing is on. |

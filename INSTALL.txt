@@ -11,45 +11,82 @@ The plugin works with both **@opencode-ai/plugin v1.x** (current) and **@opencod
 Important rules
 - Do not run npm install, bun install, or other package install commands for this plugin during user setup. opencode installs npm plugins automatically with Bun at startup.
 - Preserve existing opencode config, TUI config, plugins, comments, formatting, providers, agents, MCP servers, and permissions whenever possible.
-- Use the singular key "plugin", not "plugins".
+- **v1 uses `plugin` (singular), v2 uses `plugins` (plural)** — see config examples below.
 - Add the plugin only if it is not already present.
 - Prefer @thelioo/opencode-balancer (without @latest) for user installs.
 - Keep config changes minimal and do not remove unrelated user settings.
 
 **Determine the user's opencode version:**
-- If they use opencode v1 (current stable): use `@thelioo/opencode-balancer` and `@thelioo/opencode-balancer/tui`
-- If they use opencode v2 (upcoming): use `@thelioo/opencode-balancer/v2` and `@thelioo/opencode-balancer/v2/tui`
+- If they use opencode v1 (current stable): use `@thelioo/opencode-balancer` and `@thelioo/opencode-balancer/tui` with `plugin` key (singular)
+- If they use opencode v2 (upcoming): use `@thelioo/opencode-balancer/v2` and `@thelioo/opencode-balancer/v2/tui` with `plugins` key (plural)
 
 Steps
+
+### For opencode v1 (current stable)
+
 1. Locate the user's opencode config.
    - Prefer ~/.config/opencode/opencode.jsonc if it exists.
    - Otherwise use ~/.config/opencode/opencode.json if it exists.
    - If neither exists, create ~/.config/opencode/opencode.json with a minimal JSON object.
 
-2. Ensure the config has a top-level plugin array.
-   - If plugin already exists and is an array, keep all existing entries.
-   - If plugin is missing, create it.
+2. Ensure the config has a top-level **`plugin`** array (singular).
+   - If `plugin` already exists and is an array, keep all existing entries.
+   - If `plugin` is missing, create it.
    - If the config is JSONC, keep JSONC syntax valid.
    - If the config is JSON, keep JSON syntax valid.
 
-3. Add this plugin entry to the opencode config plugin array:
-   - **v1**: `@thelioo/opencode-balancer`
-   - **v2**: `@thelioo/opencode-balancer/v2`
+3. Add this plugin entry to the opencode config `plugin` array:
+   - `@thelioo/opencode-balancer`
 
 4. Locate the user's opencode TUI config.
    - Prefer ~/.config/opencode/tui.jsonc if it exists.
    - Otherwise use ~/.config/opencode/tui.json if it exists.
    - If neither exists, create ~/.config/opencode/tui.json with a minimal JSON object.
 
-5. Ensure the TUI config has a top-level plugin array.
-   - If plugin already exists and is an array, keep all existing entries.
-   - If plugin is missing, create it.
+5. Ensure the TUI config has a top-level **`plugin`** array (singular).
+   - If `plugin` already exists and is an array, keep all existing entries.
+   - If `plugin` is missing, create it.
    - If the config is JSONC, keep JSONC syntax valid.
    - If the config is JSON, keep JSON syntax valid.
 
-6. Add this plugin entry to the TUI config plugin array:
-   - **v1**: `@thelioo/opencode-balancer`
-   - **v2**: `@thelioo/opencode-balancer/v2/tui`
+6. Add this plugin entry to the TUI config `plugin` array:
+   - `@thelioo/opencode-balancer`
+
+7. Save both configs.
+
+8. Show the user both final plugin arrays.
+
+9. Tell the user to restart opencode.
+
+### For opencode v2 (upcoming)
+
+1. Locate the user's opencode config.
+   - Prefer ~/.config/opencode/opencode.jsonc if it exists.
+   - Otherwise use ~/.config/opencode/opencode.json if it exists.
+   - If neither exists, create ~/.config/opencode/opencode.json with a minimal JSON object.
+
+2. Ensure the config has a top-level **`plugins`** array (plural).
+   - If `plugins` already exists and is an array, keep all existing entries.
+   - If `plugins` is missing, create it.
+   - If the config is JSONC, keep JSONC syntax valid.
+   - If the config is JSON, keep JSON syntax valid.
+
+3. Add this plugin entry to the opencode config `plugins` array:
+   - `@thelioo/opencode-balancer/v2`
+
+4. Locate the user's opencode TUI config.
+   - Prefer ~/.config/opencode/tui.jsonc if it exists.
+   - Otherwise use ~/.config/opencode/tui.json if it exists.
+   - If neither exists, create ~/.config/opencode/tui.json with a minimal JSON object.
+
+5. Ensure the TUI config has a top-level **`plugins`** array (plural).
+   - If `plugins` already exists and is an array, keep all existing entries.
+   - If `plugins` is missing, create it.
+   - If the config is JSONC, keep JSONC syntax valid.
+   - If the config is JSON, keep JSON syntax valid.
+
+6. Add this plugin entry to the TUI config `plugins` array:
+   - `@thelioo/opencode-balancer/v2/tui`
 
 7. Save both configs.
 
@@ -72,13 +109,13 @@ Expected TUI config shape (v1)
 Expected config shape (v2)
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@thelioo/opencode-balancer/v2"]
+  "plugins": ["@thelioo/opencode-balancer/v2"]
 }
 
 Expected TUI config shape (v2)
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["@thelioo/opencode-balancer/v2/tui"]
+  "plugins": ["@thelioo/opencode-balancer/v2/tui"]
 }
 
 After restart
@@ -107,8 +144,10 @@ TUI-only workflow
 /balancer opens the Balancer dashboard in the TUI. Account management, provider/model priority, supported usage snapshots, and balancing settings are handled from the TUI only.
 
 Verification
-- Confirm the opencode config contains @thelioo/opencode-balancer in the plugin array.
-- Confirm the opencode TUI config contains @thelioo/opencode-balancer in the plugin array.
+- **v1**: Confirm the opencode config contains @thelioo/opencode-balancer in the `plugin` array (singular).
+- **v2**: Confirm the opencode config contains @thelioo/opencode-balancer/v2 in the `plugins` array (plural).
+- **v1**: Confirm the opencode TUI config contains @thelioo/opencode-balancer in the `plugin` array (singular).
+- **v2**: Confirm the opencode TUI config contains @thelioo/opencode-balancer/v2/tui in the `plugins` array (plural).
 - Confirm no existing plugin entries were removed.
 - Confirm the user restarted opencode after the config change.
 - Confirm the Balancer dashboard opens with Ctrl+B, /balancer, or the command palette.
