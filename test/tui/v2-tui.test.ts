@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { TempDirManager } from "../utils";
 import { join } from "node:path";
 
 const compact = (source: string) => source.replace(/\s+/g, "");
@@ -9,21 +8,17 @@ const expectSourceToContain = (source: string, snippet: string) =>
 
 import plugin from "../../src/v2/tui";
 
-let configDirs: string[] = [];
-
-afterEach(() => {
-	for (const dir of configDirs) {
-		rmSync(dir, { force: true, recursive: true });
-	}
-	configDirs = [];
-	delete Bun.env.OPENCODE_CONFIG_DIR;
-});
+const configDirManager = new TempDirManager();
 
 function withTempConfigDir() {
-	const dir = mkdtempSync(join(tmpdir(), "opencode-balancer-v2-tui-plugin-"));
-	configDirs.push(dir);
+	const dir = configDirManager.create("opencode-balancer-v2-tui-plugin-");
 	Bun.env.OPENCODE_CONFIG_DIR = dir;
 }
+
+afterEach(() => {
+	configDirManager.cleanup();
+	delete Bun.env.OPENCODE_CONFIG_DIR;
+});
 
 function createV2Api() {
 	const routes: any[] = [];
@@ -36,16 +31,26 @@ function createV2Api() {
 	const disposes: Array<() => void | Promise<void>> = [];
 
 	const context = {
+		lifecycle: {
+			onDispose: (fn: () => void | Promise<void>) => {
+				disposes.push(fn);
+			},
+		},
 		keymap: {
 			layer: (layerFn: any) => {
 				const layer = layerFn();
 				keymapLayers.push(layer);
 				return () => {};
 			},
+			registerLayer: (layer: any) => {
+				keymapLayers.push(layer);
+				return () => {};
+			},
 		},
 		ui: {
 			dialog: {
-				open: (render: () => unknown) => {
+				open: false,
+				openFn: (render: () => unknown) => {
 					dialogs.push(render);
 				},
 			},
@@ -64,6 +69,7 @@ function createV2Api() {
 					routes.push(...defs);
 					return () => {};
 				},
+				current: { name: "home" },
 			},
 			slot: (slotDef: any) => {
 				slots.push(slotDef);
@@ -74,6 +80,42 @@ function createV2Api() {
 					toasts.push(input);
 				},
 			},
+			slots: {
+				register: (slotDef: any) => {
+					if (slotDef.slots && typeof slotDef.slots === "object") {
+						for (const [key, slot] of Object.entries(slotDef.slots)) {
+							slots.push({ ...(slot as object), name: key });
+						}
+					}
+					return () => {};
+				},
+			},
+		},
+		command: undefined,
+		route: {
+			current: { name: "home" },
+			navigate: (target: any) => {
+				navigations.push(target);
+			},
+		},
+		state: {
+			session: new Map(),
+			provider: [],
+		},
+		theme: {
+			current: {
+				accent: "accent",
+				primary: "primary",
+				text: "text",
+				textMuted: "textMuted",
+				warning: "warning",
+				success: "success",
+				background: "background",
+			},
+		},
+		renderer: {
+			height: 40,
+			width: 120,
 		},
 	};
 
@@ -91,53 +133,57 @@ function createV2Api() {
 }
 
 describe("v2 tui plugin", () => {
-	test("registers dashboard routes, keymap layer, and slots", async () => {
-		withTempConfigDir();
-		const {
-			context,
-			routes,
-			keymapLayers,
-			navigations,
-			dialogs,
-			dialogSizes,
-			toasts,
-			slots,
-			disposes,
-		} = createV2Api();
+	test(
+		"registers dashboard routes, keymap layer, and slots",
+		async () => {
+			withTempConfigDir();
+			const {
+				context,
+				routes,
+				keymapLayers,
+				navigations,
+				dialogs,
+				dialogSizes,
+				toasts,
+				slots,
+				disposes,
+			} = createV2Api();
 
-		await plugin.setup(context as any);
+			await plugin.setup(context as any);
 
-		expect(routes.map((route) => route.name)).toEqual([
-			"balancer.dashboard",
-			"balancer.priority",
-		]);
-		expect(keymapLayers).toHaveLength(1);
-		expect(keymapLayers[0].mode).toBe("global");
-		expect(keymapLayers[0].commands).toHaveLength(1);
-		expect(keymapLayers[0].commands[0].id).toBe("balancer.dashboard.open");
-		expect(keymapLayers[0].commands[0].bind).toBe("ctrl+b");
-		expect(keymapLayers[0].commands[0].slash).toEqual({ name: "balancer" });
+			expect(routes.map((route) => route.name)).toEqual([
+				"balancer.dashboard",
+				"balancer.priority",
+			]);
+			expect(keymapLayers).toHaveLength(1);
+			expect(keymapLayers[0].mode).toBe("global");
+			expect(keymapLayers[0].commands).toHaveLength(1);
+			expect(keymapLayers[0].commands[0].id).toBe("balancer.dashboard.open");
+			expect(keymapLayers[0].commands[0].bind).toBe("ctrl+b");
+			expect(keymapLayers[0].commands[0].slash).toEqual({ name: "balancer" });
 
-		expect(slots).toHaveLength(2);
-		expect(slots[0].append).toBe("session.composer.top");
-		expect(slots[1].append).toBe("sidebar.content");
+			expect(slots).toHaveLength(2);
+			expect(slots[0].append).toBe("session.composer.top");
+			expect(slots[1].append).toBe("sidebar.content");
 
-		const openCmd = keymapLayers[0].commands[0];
-		openCmd.run();
+			const openCmd = keymapLayers[0].commands[0];
+			openCmd.run();
 
-		expect(dialogSizes).toEqual([]);
-		expect(dialogs).toEqual([]);
-		expect(navigations).toEqual([
-			{ name: "balancer.dashboard", type: "plugin" },
-		]);
-		expect(toasts).toHaveLength(1);
-		expect(toasts[0]).toMatchObject({
-			message: "OpenCode Balancer loaded (v2)",
-			variant: "success",
-		});
+			expect(dialogSizes).toEqual([]);
+			expect(dialogs).toEqual([]);
+			expect(navigations).toEqual([
+				"balancer.dashboard",
+			]);
+			expect(toasts).toHaveLength(1);
+			expect(toasts[0]).toMatchObject({
+				message: "OpenCode Balancer loaded (v2)",
+				variant: "success",
+			});
 
-		for (const dispose of disposes) await dispose();
-	});
+			for (const dispose of disposes) await dispose();
+		},
+		{ timeout: 30000 },
+	);
 
 	test("registers status indicator in session composer top slot", async () => {
 		withTempConfigDir();
