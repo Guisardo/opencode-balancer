@@ -1,0 +1,11 @@
+test: add v2 testing infrastructure and CI for dual v1/v2 compatibility
+
+- Add test/server/index.v2.test.ts (9 tests for v2 server hooks)
+- Add test/tui/v2-tui.test.ts (6 tests for v2 TUI plugin)
+- Add test/v2-index.test.ts (2 tests for v2 plugin entrypoint)
+- Add .github/workflows/test.yml (matrix CI for v1 and v2)
+- Update src/server/index.v2.ts to accept optional database param
+- Update README.md with v1/v2 compatibility documentation
+- Update INSTALL.txt with v1/v2 installation instructions
+
+Resolves #8

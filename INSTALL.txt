@@ -6,6 +6,8 @@ Install @thelioo/opencode-balancer as both an opencode server plugin and an open
 What this plugin does
 opencode-balancer lets opencode users save multiple authenticated accounts per provider, manage them from a TUI dashboard, choose provider/model priority, and automatically retry with another healthy account when the active account is rate-limited.
 
+The plugin works with both **@opencode-ai/plugin v1.x** (current) and **@opencode/plugin v2** (upcoming) from a single codebase. Use the appropriate entrypoint for the user's opencode version.
+
 Important rules
 - Do not run npm install, bun install, or other package install commands for this plugin during user setup. opencode installs npm plugins automatically with Bun at startup.
 - Preserve existing opencode config, TUI config, plugins, comments, formatting, providers, agents, MCP servers, and permissions whenever possible.
@@ -13,6 +15,10 @@ Important rules
 - Add the plugin only if it is not already present.
 - Prefer @thelioo/opencode-balancer (without @latest) for user installs.
 - Keep config changes minimal and do not remove unrelated user settings.
+
+**Determine the user's opencode version:**
+- If they use opencode v1 (current stable): use `@thelioo/opencode-balancer` and `@thelioo/opencode-balancer/tui`
+- If they use opencode v2 (upcoming): use `@thelioo/opencode-balancer/v2` and `@thelioo/opencode-balancer/v2/tui`
 
 Steps
 1. Locate the user's opencode config.
@@ -27,7 +33,8 @@ Steps
    - If the config is JSON, keep JSON syntax valid.
 
 3. Add this plugin entry to the opencode config plugin array:
-   @thelioo/opencode-balancer
+   - **v1**: `@thelioo/opencode-balancer`
+   - **v2**: `@thelioo/opencode-balancer/v2`
 
 4. Locate the user's opencode TUI config.
    - Prefer ~/.config/opencode/tui.jsonc if it exists.
@@ -41,7 +48,8 @@ Steps
    - If the config is JSON, keep JSON syntax valid.
 
 6. Add this plugin entry to the TUI config plugin array:
-   @thelioo/opencode-balancer
+   - **v1**: `@thelioo/opencode-balancer`
+   - **v2**: `@thelioo/opencode-balancer/v2/tui`
 
 7. Save both configs.
 
@@ -49,16 +57,28 @@ Steps
 
 9. Tell the user to restart opencode.
 
-Expected config shape
+Expected config shape (v1)
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": ["@thelioo/opencode-balancer"]
 }
 
-Expected TUI config shape
+Expected TUI config shape (v1)
 {
   "$schema": "https://opencode.ai/tui.json",
   "plugin": ["@thelioo/opencode-balancer"]
+}
+
+Expected config shape (v2)
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@thelioo/opencode-balancer/v2"]
+}
+
+Expected TUI config shape (v2)
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["@thelioo/opencode-balancer/v2/tui"]
 }
 
 After restart
