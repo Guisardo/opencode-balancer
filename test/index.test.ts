@@ -17,6 +17,6 @@ describe("plugin entrypoint", () => {
 		// Just verify server is a function - full integration tests are in server tests
 		expect(typeof server).toBe("function");
 		// Verify it has the correct name for v1 plugin loading
-		expect(server.name).toBe("");
+		expect(server.name).toBe("server");
 	});
 });
